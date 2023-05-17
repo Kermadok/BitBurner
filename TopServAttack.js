@@ -10,7 +10,7 @@ export async function main(ns) {
         for (let j = 0; j < thisScan.length; j++) {
           if (serversSeen.indexOf(thisScan[j]) === -1) {
             serversSeen.push(thisScan[j]);
-          }
+        }
         }
       }
   
@@ -171,4 +171,4 @@ export async function main(ns) {
       }
       await ns.sleep(10000)
     }
-  }
+  
