@@ -2,7 +2,7 @@
 export async function main(ns) {
 	//paramètres
 
-	let ratio_hack = 0.9 //ratio à hack sur serveur (1=tout)
+	let ratio_hack = 0.5 //ratio à hack sur serveur (1=rien)
 	let nb_top = 10 //nombre de serveurs dans le top
 
 	// Initialiser les variables
@@ -60,35 +60,41 @@ export async function main(ns) {
 				if (nb_threads > threadsmax && threadsmax >= 1) {
 					nb_threads = threadsmax;
 				}
-				ns.tprint("weaken lancé: ", ns.getServerSecurityLevel(serveur), "(min: ", ns.getServerMinSecurityLevel(serveur), ")");
-				ns.exec("weaken.js", "home", nb_threads, serveur);
+				//ns.tprint("weaken lancé: ", ns.getServerSecurityLevel(serveur), "(min: ", ns.getServerMinSecurityLevel(serveur), ")");
+				ns.exec("weaken.js", "home", nb_threads + 1, serveur);
 			}
 		}
 	}
 
 	//Fonction Grow
 	async function rungrow(serveur) {
+		const moneyThresh = ns.getServerMaxMoney(serveur) * 0.9;
 		if (ns.isRunning("weaken.js", "home", serveur) || ns.isRunning("grow.js", "home", serveur) || ns.isRunning("hack.js", "home", serveur)) {
-			//ns.tprint("skip grow")
+
 		}
 		else {
-			//ns.tprint("Money available: ", ns.getServerMoneyAvailable(serveur))
-			const moneyThresh = ns.getServerMaxMoney(serveur) * 0.9;
+
 			if (ns.getServerMoneyAvailable(serveur) < moneyThresh) {
 				let ramscript = ns.getScriptRam("grow.js");
 				let rammax = ns.getServerMaxRam("home");
 				let usedram = ns.getServerUsedRam("home");
-				let threadsmax = Math.floor((rammax - usedram) / ramscript);
+				let threadsmax = (rammax - usedram) / ramscript;
+				//ns.tprint("threadsmax :", threadsmax);
+				//ns.tprint("rammax :", rammax);
+				//ns.tprint("usedram :", usedram);
 				//nombre de growth necessaire pour cap
 				let grow_ratio = ns.getServerMaxMoney(serveur) / ns.getServerMoneyAvailable(serveur);
+
 				let nb_grow = ns.growthAnalyze(serveur, grow_ratio);
+
 
 				if (nb_grow > threadsmax && threadsmax >= 1) {
 					nb_grow = threadsmax;
 				}
 
-				ns.exec("grow.js", "home", Math.floor(nb_grow), serveur);
+				ns.run("grow.js", Math.floor(nb_grow) + 1, serveur);
 			}
+
 		}
 	}
 
@@ -119,7 +125,7 @@ export async function main(ns) {
 				nb_threads = threadsmax;
 			}
 
-			ns.exec("hack.js", "home", nb_threads, serveur);
+			ns.exec("hack.js", "home", nb_threads + 1, serveur);
 		}
 	}
 
@@ -129,7 +135,7 @@ export async function main(ns) {
 		let topServers = [];
 		// Classement rentabilité top x
 		for (let server of liste_serveurs) {
-			
+
 			// Ignorer le serveur si son niveau de sécurité est supérieur à votre niveau de piratage actuel
 			if ((ns.getServerRequiredHackingLevel(server) * 1.5) > ns.getHackingLevel(server) + 1) {
 				continue;
